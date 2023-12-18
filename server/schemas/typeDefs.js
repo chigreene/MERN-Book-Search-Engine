@@ -8,7 +8,7 @@ const typeDefs = `
     }
 
     type Book {
-        bookId: ID
+        bookId: String
         authors: [String]
         description: String
         title: String 
@@ -26,7 +26,7 @@ const typeDefs = `
     }
 
     input BookInput {
-        bookId: ID
+        bookId: String!
         authors: [String]
         description: String
         title: String
@@ -35,10 +35,12 @@ const typeDefs = `
     }
 
     type Mutation {
-        login(email: String!, password: String!): Auth
+        # why does addUser and password have access to the auth type?
+
+        login(username: String!, password: String!): Auth
         addUser(username: String!, email: String!, password: String!): Auth
         saveBook(input: BookInput!): User
-        removeBook(bookId: ID!): User
+        removeBook(bookId: String!): User
     }
 `;
 
