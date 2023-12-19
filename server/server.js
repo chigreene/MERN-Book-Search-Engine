@@ -13,6 +13,13 @@ const PORT = process.env.PORT || 3001;
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  // context: ({ req }) => {
+  //   // Call our authMiddleware function
+  //   const userContext = authMiddleware({ req });
+
+  //   // The returned context will be available in your resolvers as the third argument
+  //   return userContext;
+  // },
 });
 
 const startApolloServer = async () => {

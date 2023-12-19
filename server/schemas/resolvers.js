@@ -3,18 +3,29 @@ const { signToken, AuthenticationError } = require("../utils/auth");
 
 const resolvers = {
   Query: {
-    user: async () => {
-      return await User.find().populate("savedBooks");
+    me: async (parent, arg, context) => {
+      const userId = context.user.id;
+      console.log("User ID:", userId);
+      const user = await User.findById(userId);
+      console.log("User:", user);
+      return user;
     },
   },
   Mutation: {
     addUser: async (parent, { username, email, password }) => {
-      const user = await User.create({ username, email, password });
-      console.log("User:", user);
+      // console.log("addUser called with:", { username, email, password });
 
-      const token = signToken(user);
-      console.log("Token:", token);
-      return { token, user };
+      try {
+        const user = await User.create({ username, email, password });
+        // console.log("User:", user);
+
+        const token = signToken(user);
+        // console.log("Token:", token);
+
+        return { token, user };
+      } catch (error) {
+        console.error("Error in addUser:", error);
+      }
     },
     login: async (parent, { username, password }) => {
       const user = await User.findOne({ username });
@@ -35,7 +46,8 @@ const resolvers = {
     },
     saveBook: async (
       parent,
-      { bookId, authors, description, title, image, link }
+      { bookId, authors, description, title, image, link },
+      context
     ) => {
       if (context.user) {
         const newBook = await Book.create({
@@ -58,24 +70,23 @@ const resolvers = {
 
       throw AuthenticationError;
     },
-  },
-  removeBook: async (parent, { bookId }, context) => {
-    if (context.user) {
-      const book = await Book.findOneAndDelete({
-        bookId: bookId,
-        //   may need to add another filter here to make user only logged in user can remove this from his list
-      });
+    removeBook: async (parent, { bookId }, context) => {
+      if (context.user) {
+        const book = await Book.findOneAndDelete({
+          bookId: bookId,
+          //   may need to add another filter here to make user only logged in user can remove this from his list
+        });
 
-      await User.findOneAndUpdate(
-        { _id: context.user._id },
-        { $pull: { savedBooks: book.bookId } }
-      );
+        await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: book.bookId } }
+        );
 
-      return book;
-    }
-
-    throw AuthenticationError;
+        return book;
+      }
+      throw AuthenticationError;
+    },
   },
 };
 
-module.export = resolvers;
+module.exports = resolvers;
