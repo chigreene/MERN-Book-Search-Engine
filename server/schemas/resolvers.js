@@ -28,8 +28,8 @@ const resolvers = {
         console.error("Error in addUser:", error);
       }
     },
-    login: async (parent, { username, password }) => {
-      const user = await User.findOne({ username });
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
 
       if (!user) {
         throw AuthenticationError;

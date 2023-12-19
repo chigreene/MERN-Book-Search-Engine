@@ -37,7 +37,7 @@ const typeDefs = `
     type Mutation {
         # why does addUser and password have access to the auth type?
 
-        login(username: String!, password: String!): Auth
+        login(email: String!, password: String!): Auth
         addUser(username: String!, email: String!, password: String!): Auth
         saveBook(input: BookInput!): User
         removeBook(bookId: String!): User
