@@ -1,4 +1,4 @@
-const { Book, User } = require("../models");
+const { User } = require("../models");
 const { signToken, AuthenticationError } = require("../utils/auth");
 
 const resolvers = {
@@ -47,44 +47,46 @@ const resolvers = {
     },
     saveBook: async (
       parent,
-      { bookId, authors, description, title, image, link },
+      { input: { bookId, authors, description, title, image, link } },
       context
     ) => {
       if (context.user) {
-        const newBook = await Book.create({
+        const newBook = {
           bookId,
           authors,
           description,
           title,
           image,
           link,
-        });
+        };
 
-        await User.findOneAndUpdate(
+        const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
           //   is this the right id to use here????
-          { $addToSet: { savedBooks: newBook.bookId } }
+          { $addToSet: { savedBooks: newBook } },
+          { new: true }
         );
 
-        return newBook;
+        return updatedUser;
       }
 
       throw AuthenticationError;
     },
     removeBook: async (parent, { bookId }, context) => {
       if (context.user) {
-        const book = await Book.findOneAndDelete({
-          bookId: bookId,
-          //   may need to add another filter here to make user only logged in user can remove this from his list
-        });
-
-        await User.findOneAndUpdate(
-          { _id: context.user._id },
-          { $pull: { savedBooks: book.bookId } }
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id, "savedBooks.bookId": bookId },
+          { $pull: { savedBooks: { bookId: bookId } } },
+          { new: true }
         );
 
-        return book;
+        if (!updatedUser) {
+          throw new Error("No book with this id found for this user");
+        }
+
+        return updatedUser;
       }
+
       throw AuthenticationError;
     },
   },
